@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Animation Test</title>
+  <style>
+    body {
+      background: #000;
+      color: #0f0;
+      font-family: 'Courier New', monospace;
+      margin: 0;
+      padding: 0;
+    }
+
+    .items-container {
+      padding: 40px 20px;
+    }
+
+    .item {
+      font-size: 48px;
+      margin-bottom: 120px;
+      transition: transform 0.2s ease-out;
+      cursor: pointer;
+    }
+
+    .sticky-container {
+      position: sticky;
+      top: 100px;
+      height: 200px;
+      z-index: 50;
+      overflow: visible;
+    }
+  </style>
+</head>
+<body>
+  <div id="content">
+    <div class="items-container">
+      <div class="item">ITEM A</div>
+      <div class="item">ITEM B</div>
+      <div class="item">ITEM C</div>
+      <div class="item">ITEM D</div>
+      <div class="item">ITEM E</div>
+      <div class="item">ITEM F</div>
+      <div class="item">ITEM G</div>
+    </div>
+  </div>
+  
+  <script>
+    const items = document.querySelectorAll('.item');
+    const content = document.getElementById('content');
+
+    // Create sticky container
+    const stickyContainer = document.createElement('div');
+    stickyContainer.className = 'sticky-container';
+    content.prepend(stickyContainer);
+
+    // Item states
+    const itemStates = {};
+
+    window.addEventListener('scroll', () => {
+      items.forEach((item, index) => {
+        const rect = item.getBoundingClientRect();
+        
+        // If item reaches threshold
+        if (rect.top < 200) {
+          if (!itemStates[index]) {
+            // Clone the item for the sticky container
+            const clone = item.cloneNode(true);
+            clone.id = `sticky-${index}`;
+            clone.style.position = 'absolute';
+            stickyContainer.appendChild(clone);
+            
+            // Mark this item as at the top
+            itemStates[index] = {
+              element: clone,
+              x: 0,
+              y: 0, 
+              rotation: 0,
+              chaos: 0
+            };
+            
+            // Hide original
+            item.style.opacity = 0;
+          }
+          
+          // Increase chaos based on how far we've scrolled past it
+          const distancePastThreshold = 200 - rect.top;
+          const chaos = Math.min(1, distancePastThreshold / 300);
+          
+          itemStates[index].chaos = chaos;
+          itemStates[index].x += (Math.random() * 30 - 15) * chaos;
+          itemStates[index].y = Math.random() * 20 * chaos;
+          itemStates[index].rotation += (Math.random() * 20 - 10) * chaos;
+          
+          // Apply transformation
+          itemStates[index].element.style.transform = 
+            `translate(${itemStates[index].x}px, ${itemStates[index].y}px) rotate(${itemStates[index].rotation}deg)`;
+        }
+        // If scrolling back up
+        else if (itemStates[index]) {
+          itemStates[index].x *= 0.8;
+          itemStates[index].y *= 0.8;
+          itemStates[index].rotation *= 0.8;
+          
+          // Apply reduced transformation
+          itemStates[index].element.style.transform = 
+            `translate(${itemStates[index].x}px, ${itemStates[index].y}px) rotate(${itemStates[index].rotation}deg)`;
+          
+          // If nearly reset, remove from sticky and show original
+          if (Math.abs(itemStates[index].x) < 5 && 
+              Math.abs(itemStates[index].y) < 5 && 
+              Math.abs(itemStates[index].rotation) < 5) {
+            stickyContainer.removeChild(itemStates[index].element);
+            delete itemStates[index];
+            item.style.opacity = 1;
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
