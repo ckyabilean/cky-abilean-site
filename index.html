@@ -2,6 +2,7 @@
 <html>
 <head>
   <title>Animation Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       background: #000;
@@ -29,6 +30,43 @@
       z-index: 50;
       overflow: visible;
     }
+    
+    /* Controls panel */
+    .controls {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(0, 20, 0, 0.8);
+      padding: 15px;
+      border: 1px solid #0f0;
+      z-index: 100;
+    }
+    
+    .controls button {
+      background: #0f0;
+      color: #000;
+      border: none;
+      padding: 8px 15px;
+      margin: 5px;
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+    }
+    
+    .controls label {
+      display: block;
+      margin: 10px 0 5px;
+    }
+    
+    /* Scramble effect styling */
+    .scramble-char {
+      display: inline-block;
+    }
+    
+    @media (max-width: 768px) {
+      .item {
+        font-size: 32px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -44,9 +82,75 @@
     </div>
   </div>
   
+  <div class="controls">
+    <button id="resetBtn">Reset Animation</button>
+    <label>
+      Scramble Speed:
+      <input type="range" id="scrambleSpeed" min="1" max="10" value="5">
+    </label>
+    <label>
+      Chaos Intensity:
+      <input type="range" id="chaosIntensity" min="1" max="20" value="10">
+    </label>
+  </div>
+  
   <script>
+    // Text scramble effect class
+    class TextScramble {
+      constructor(element) {
+        this.element = element;
+        this.originalText = element.innerText;
+        this.chars = '!<>-_\\/[]{}—=+*^?#________';
+        this.frameRate = 15;
+        this.frameRequest = null;
+        this.frames = 0;
+        this.finalText = this.originalText;
+      }
+      
+      randomChar() {
+        return this.chars[Math.floor(Math.random() * this.chars.length)];
+      }
+      
+      update() {
+        const speed = parseInt(document.getElementById('scrambleSpeed').value);
+        let output = '';
+        let complete = true;
+        
+        // Create scrambled version of text
+        for (let i = 0; i < this.finalText.length; i++) {
+          // If character should be scrambled
+          if (this.frames < 10 * (10 - speed) || Math.random() < this.frames / (100 * (10 - speed))) {
+            output += `<span class="scramble-char">${this.randomChar()}</span>`;
+            complete = false;
+          } else {
+            output += `<span class="scramble-char">${this.finalText[i]}</span>`;
+          }
+        }
+        
+        this.element.innerHTML = output;
+        
+        if (!complete) {
+          this.frames++;
+          this.frameRequest = requestAnimationFrame(() => this.update());
+        }
+      }
+      
+      start() {
+        this.frames = 0;
+        cancelAnimationFrame(this.frameRequest);
+        this.update();
+      }
+      
+      reset() {
+        cancelAnimationFrame(this.frameRequest);
+        this.element.innerText = this.originalText;
+      }
+    }
+  
+    // Initialize main animation
     const items = document.querySelectorAll('.item');
     const content = document.getElementById('content');
+    const scrambleInstances = [];
 
     // Create sticky container
     const stickyContainer = document.createElement('div');
@@ -55,8 +159,32 @@
 
     // Item states
     const itemStates = {};
+    
+    // Initialize scramble effect for each item
+    items.forEach(item => {
+      const scrambler = new TextScramble(item);
+      scrambleInstances.push(scrambler);
+    });
+
+    // Controls
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      // Clear all sticky items
+      stickyContainer.innerHTML = '';
+      
+      // Reset states
+      Object.keys(itemStates).forEach(key => {
+        delete itemStates[key];
+      });
+      
+      // Show all original items
+      items.forEach(item => {
+        item.style.opacity = 1;
+      });
+    });
 
     window.addEventListener('scroll', () => {
+      const chaosIntensity = parseInt(document.getElementById('chaosIntensity').value);
+      
       items.forEach((item, index) => {
         const rect = item.getBoundingClientRect();
         
@@ -75,8 +203,12 @@
               x: 0,
               y: 0, 
               rotation: 0,
-              chaos: 0
+              chaos: 0,
+              scrambler: new TextScramble(clone)
             };
+            
+            // Start text scramble
+            itemStates[index].scrambler.start();
             
             // Hide original
             item.style.opacity = 0;
@@ -87,9 +219,9 @@
           const chaos = Math.min(1, distancePastThreshold / 300);
           
           itemStates[index].chaos = chaos;
-          itemStates[index].x += (Math.random() * 30 - 15) * chaos;
-          itemStates[index].y = Math.random() * 20 * chaos;
-          itemStates[index].rotation += (Math.random() * 20 - 10) * chaos;
+          itemStates[index].x += (Math.random() * 3 * chaosIntensity - 1.5 * chaosIntensity) * chaos;
+          itemStates[index].y = Math.random() * 2 * chaosIntensity * chaos;
+          itemStates[index].rotation += (Math.random() * 2 * chaosIntensity - 1 * chaosIntensity) * chaos;
           
           // Apply transformation
           itemStates[index].element.style.transform = 
