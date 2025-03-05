@@ -5,11 +5,85 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
-      background: #000;
-      color: #0f0;
+      background: #F5EFE0;
+      color: #111;
       font-family: 'Courier New', monospace;
       margin: 0;
       padding: 0;
+      overflow: hidden; /* Prevent scrolling until intro is complete */
+    }
+
+    /* Terminal Intro Screen */
+    #intro-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #F5EFE0;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      padding: 40px;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    .terminal-text {
+      font-size: 16px;
+      line-height: 1.5;
+      margin-bottom: 8px;
+      white-space: pre-wrap;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.3s, transform 0.3s;
+    }
+
+    .terminal-text.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .command-prompt {
+      display: flex;
+      align-items: center;
+      margin-top: 20px;
+    }
+
+    .blink {
+      animation: blink-animation 1s steps(2, start) infinite;
+    }
+
+    @keyframes blink-animation {
+      to {
+        visibility: hidden;
+      }
+    }
+
+    .space-prompt {
+      position: fixed;
+      bottom: 40px;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      font-size: 18px;
+      opacity: 0;
+      transition: opacity 1s;
+    }
+
+    .space-prompt.visible {
+      opacity: 1;
+    }
+
+    .countdown {
+      font-size: 24px;
+      margin-top: 10px;
+    }
+
+    /* Main Content Styles (hidden until intro complete) */
+    #content {
+      display: none;
     }
 
     .items-container {
@@ -22,13 +96,13 @@
       transition: transform 0.2s ease-out, color 0.2s ease;
       cursor: pointer;
       display: block;
+      color: #0f0;
     }
     
-    /* Hover state for items */
     .item:hover {
-      color: #ff00ff; /* Much more dramatic magenta */
+      color: #ff00ff;
       transform: translateX(10px);
-      cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 100 100'><path fill='%23ffffff' d='M50,5C25.1,5,5,25.1,5,50c0,24.9,20.1,45,45,45s45-20.1,45-45C95,25.1,74.9,5,50,5z M25.6,29.6c2.7-2.7,7.2-2.7,9.9,0 c2.7,2.7,2.7,7.2,0,9.9c-2.7,2.7-7.2,2.7-9.9,0C22.9,36.8,22.9,32.3,25.6,29.6z M36.4,76.1c-1.4,2.3-4.3,3-6.5,1.7 c-2.3-1.4-3-4.3-1.7-6.5c8.1-13.1,23.9-13.1,32,0c1.4,2.3,0.6,5.2-1.7,6.5c-2.3,1.4-5.2,0.6-6.5-1.7 C48.7,69.6,39.6,69.6,36.4,76.1z M74.4,39.5c-2.7,2.7-7.2,2.7-9.9,0c-2.7-2.7-2.7-7.2,0-9.9c2.7-2.7,7.2-2.7,9.9,0 C77.1,32.3,77.1,36.8,74.4,39.5z'/></svg>"), auto;
+      cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 512 512'><path fill='white' d='M256,0C114.6,0,0,114.6,0,256s114.6,256,256,256s256-114.6,256-256S397.4,0,256,0z M256,464c-114.7,0-208-93.3-208-208S141.3,48,256,48s208,93.3,208,208S370.7,464,256,464z'/><path fill='white' d='M336,192c-17.7,0-32,14.3-32,32s14.3,32,32,32s32-14.3,32-32S353.7,192,336,192z'/><path fill='white' d='M176,192c-17.7,0-32,14.3-32,32s14.3,32,32,32s32-14.3,32-32S193.7,192,176,192z'/><path fill='white' d='M336,384H176c-8.8,0-16-7.2-16-16s7.2-16,16-16h160c8.8,0,16,7.2,16,16S344.8,384,336,384z'/></svg>"), auto;
     }
 
     .sticky-container {
@@ -39,13 +113,20 @@
       overflow: visible;
     }
     
-    /* Letter effect styling */
     .letter {
       display: inline-block;
       transition: transform 0.3s ease-out;
     }
     
     @media (max-width: 768px) {
+      #intro-screen {
+        padding: 20px;
+      }
+
+      .terminal-text {
+        font-size: 14px;
+      }
+
       .item {
         font-size: 32px;
       }
@@ -53,6 +134,22 @@
   </style>
 </head>
 <body>
+  <!-- Terminal Intro Screen -->
+  <div id="intro-screen">
+    <div id="terminal-container">
+      <!-- Terminal text will be added here by JS -->
+    </div>
+    <div class="command-prompt">
+      <span id="prompt">></span>
+      <span id="cursor" class="blink">_</span>
+    </div>
+    <div class="space-prompt" id="space-prompt">
+      PRESS SPACE TO ENTER (3)
+      <div class="countdown" id="countdown"></div>
+    </div>
+  </div>
+
+  <!-- Main Content (hidden until intro complete) -->
   <div id="content">
     <div class="items-container">
       <div class="item">ITEM A</div>
@@ -78,134 +175,234 @@
   </div>
   
   <script>
-    const items = document.querySelectorAll('.item');
+    // Terminal Intro Animation
+    const terminalLines = [
+      "CONSUMING DAIQUIRI.DLL",
+      "INSTALLING BIKINI.EXE...",
+      "POOLCOPTER #69",
+      "CHECKING IN FOR DUTY",
+      "MUSIC PRODUCER SYSTEM v2.0 LOADING...",
+      "INITIALIZING AUDIO SYSTEMS...",
+      "LOADING SOUND BANKS...",
+      "ESTABLISHING VIBE CONNECTION...",
+      "SYSTEM READY."
+    ];
+
+    const terminalContainer = document.getElementById('terminal-container');
+    const spacePrompt = document.getElementById('space-prompt');
+    const countdownEl = document.getElementById('countdown');
+    const introScreen = document.getElementById('intro-screen');
     const content = document.getElementById('content');
-
-    // Create sticky container
-    const stickyContainer = document.createElement('div');
-    stickyContainer.className = 'sticky-container';
-    content.prepend(stickyContainer);
-
-    // Item states
-    const itemStates = {};
-
-    // Split text into letter spans
-    function splitTextIntoLetters(element) {
-      const text = element.innerText;
-      element.innerHTML = '';
+    
+    // Add each line with a delay
+    let lineDelay = 0;
+    terminalLines.forEach((line, index) => {
+      const terminalLine = document.createElement('div');
+      terminalLine.className = 'terminal-text';
+      terminalLine.textContent = line;
+      terminalContainer.appendChild(terminalLine);
       
-      // Create a span for each letter
-      for (let i = 0; i < text.length; i++) {
-        const letter = document.createElement('span');
-        letter.className = 'letter';
-        letter.innerText = text[i];
-        element.appendChild(letter);
-      }
-      
-      return element.querySelectorAll('.letter');
-    }
-
-    // Function to clear all items - for fixing state issues
-    function resetAllItems() {
-      // Clear all sticky items
-      while (stickyContainer.firstChild) {
-        stickyContainer.removeChild(stickyContainer.firstChild);
-      }
-      
-      // Reset item states
-      Object.keys(itemStates).forEach(key => {
-        delete itemStates[key];
-      });
-      
-      // Show all original items
-      items.forEach(item => {
-        item.style.opacity = 1;
-      });
-    }
-
-    window.addEventListener('scroll', () => {
-      const currentScrollY = window.scrollY;
-      
-      // Reset everything if we scroll back to top
-      if (currentScrollY < 50) {
-        resetAllItems();
-      }
-      
-      items.forEach((item, index) => {
-        const rect = item.getBoundingClientRect();
+      // Show line with staggered delay
+      setTimeout(() => {
+        terminalLine.classList.add('visible');
         
-        // If item reaches threshold
-        if (rect.top < 200 && rect.bottom > 0) {  // Only process visible items
-          if (!itemStates[index]) {
-            // Clone the item for the sticky container
-            const clone = item.cloneNode(true);
-            clone.id = `sticky-${index}`;
-            clone.style.position = 'absolute';
-            stickyContainer.appendChild(clone);
-            
-            // Split text into letters
-            const letters = splitTextIntoLetters(clone);
-            
-            // Mark this item as at the top
-            itemStates[index] = {
-              element: clone,
-              letters: letters,
-              x: 0,
-              y: 0, 
-              rotation: 0,
-              chaos: 0
-            };
-            
-            // Hide original
-            item.style.opacity = 0;
-          }
-          
-          // Increase chaos based on how far we've scrolled past it
-          const distancePastThreshold = 200 - rect.top;
-          const chaos = Math.min(1, distancePastThreshold / 300);
-          
-          itemStates[index].chaos = chaos;
-          
-          // Apply letter separation effect
-          itemStates[index].letters.forEach((letter, i) => {
-            const randomX = (Math.random() * 60 - 30) * chaos;
-            const randomY = (Math.random() * 40 - 20) * chaos;
-            const randomRotate = (Math.random() * 40 - 20) * chaos;
-            
-            letter.style.transform = `translate(${randomX}px, ${randomY}px) rotate(${randomRotate}deg)`;
-          });
-          
-          // Also apply some movement to the whole item
-          itemStates[index].x += (Math.random() * 10 - 5) * chaos;
-          itemStates[index].y = Math.random() * 10 * chaos;
-          itemStates[index].rotation += (Math.random() * 5 - 2.5) * chaos;
-          
-          // Apply transformation to whole item
-          itemStates[index].element.style.transform = 
-            `translate(${itemStates[index].x}px, ${itemStates[index].y}px) rotate(${itemStates[index].rotation}deg)`;
+        // Show space prompt after last line
+        if (index === terminalLines.length - 1) {
+          setTimeout(() => {
+            spacePrompt.classList.add('visible');
+            initCountdown();
+          }, 1000);
         }
-        // If item is not at threshold and has a state (scrolling back up)
-        else if (rect.top >= 200 && itemStates[index]) {
-          // Remove from sticky container and reset
-          if (itemStates[index].element.parentNode === stickyContainer) {
-            stickyContainer.removeChild(itemStates[index].element);
-          }
-          delete itemStates[index];
-          item.style.opacity = 1;
-        }
-      });
+      }, lineDelay);
+      
+      lineDelay += 700; // Time between lines
     });
     
-    // Double-check reset on page load
-    resetAllItems();
+    // Initialize countdown
+    function initCountdown() {
+      let count = 3;
+      updateCountdown(count);
+      
+      const countInterval = setInterval(() => {
+        count--;
+        if (count <= 0) {
+          clearInterval(countInterval);
+          // Auto-start after countdown
+          startMainExperience();
+        } else {
+          updateCountdown(count);
+        }
+      }, 1000);
+    }
     
-    // Handle manual reset if things get stuck
-    document.addEventListener('keydown', function(e) {
-      // Press Escape key to reset everything
-      if (e.key === 'Escape') {
-        resetAllItems();
+    function updateCountdown(count) {
+      spacePrompt.innerHTML = `PRESS SPACE TO ENTER (${count})`;
+    }
+    
+    // Space key handler
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && introScreen.style.opacity !== '0') {
+        startMainExperience();
       }
     });
+    
+    // Click/tap handler for mobile
+    introScreen.addEventListener('click', () => {
+      if (introScreen.style.opacity !== '0') {
+        startMainExperience();
+      }
+    });
+    
+    function startMainExperience() {
+      // Fade out intro screen
+      introScreen.style.transition = 'opacity 1s';
+      introScreen.style.opacity = '0';
+      
+      // Show content and enable scrolling
+      setTimeout(() => {
+        introScreen.style.display = 'none';
+        content.style.display = 'block';
+        document.body.style.overflow = 'auto';
+        document.body.style.background = '#000';
+        
+        // Initialize main animation
+        initMainAnimation();
+        
+        // Play audio (uncomment when you have audio)
+        // playBackgroundAudio();
+      }, 1000);
+    }
+    
+    // Placeholder for audio function - implement when you have audio
+    function playBackgroundAudio() {
+      const audio = new Audio('path/to/your/audio.mp3');
+      audio.loop = true;
+      audio.volume = 0.7;
+      
+      // Need user gesture for audio on mobile
+      const playPromise = audio.play();
+      
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.log('Audio play failed:', error);
+        });
+      }
+    }
+    
+    // Main Animation (copied from your existing code)
+    function initMainAnimation() {
+      const items = document.querySelectorAll('.item');
+      
+      // Create sticky container
+      const stickyContainer = document.createElement('div');
+      stickyContainer.className = 'sticky-container';
+      content.prepend(stickyContainer);
+      
+      // Item states
+      const itemStates = {};
+      
+      // Split text function
+      function splitTextIntoLetters(element) {
+        const text = element.innerText;
+        element.innerHTML = '';
+        
+        for (let i = 0; i < text.length; i++) {
+          const letter = document.createElement('span');
+          letter.className = 'letter';
+          letter.innerText = text[i];
+          element.appendChild(letter);
+        }
+        
+        return element.querySelectorAll('.letter');
+      }
+      
+      // Reset function
+      function resetAllItems() {
+        while (stickyContainer.firstChild) {
+          stickyContainer.removeChild(stickyContainer.firstChild);
+        }
+        
+        Object.keys(itemStates).forEach(key => {
+          delete itemStates[key];
+        });
+        
+        items.forEach(item => {
+          item.style.opacity = 1;
+        });
+      }
+      
+      // Scroll event
+      window.addEventListener('scroll', () => {
+        const currentScrollY = window.scrollY;
+        
+        if (currentScrollY < 50) {
+          resetAllItems();
+        }
+        
+        items.forEach((item, index) => {
+          const rect = item.getBoundingClientRect();
+          
+          if (rect.top < 200 && rect.bottom > 0) {
+            if (!itemStates[index]) {
+              const clone = item.cloneNode(true);
+              clone.id = `sticky-${index}`;
+              clone.style.position = 'absolute';
+              stickyContainer.appendChild(clone);
+              
+              const letters = splitTextIntoLetters(clone);
+              
+              itemStates[index] = {
+                element: clone,
+                letters: letters,
+                x: 0,
+                y: 0, 
+                rotation: 0,
+                chaos: 0
+              };
+              
+              item.style.opacity = 0;
+            }
+            
+            const distancePastThreshold = 200 - rect.top;
+            const chaos = Math.min(1, distancePastThreshold / 300);
+            
+            itemStates[index].chaos = chaos;
+            
+            itemStates[index].letters.forEach((letter, i) => {
+              const randomX = (Math.random() * 60 - 30) * chaos;
+              const randomY = (Math.random() * 40 - 20) * chaos;
+              const randomRotate = (Math.random() * 40 - 20) * chaos;
+              
+              letter.style.transform = `translate(${randomX}px, ${randomY}px) rotate(${randomRotate}deg)`;
+            });
+            
+            itemStates[index].x += (Math.random() * 10 - 5) * chaos;
+            itemStates[index].y = Math.random() * 10 * chaos;
+            itemStates[index].rotation += (Math.random() * 5 - 2.5) * chaos;
+            
+            itemStates[index].element.style.transform = 
+              `translate(${itemStates[index].x}px, ${itemStates[index].y}px) rotate(${itemStates[index].rotation}deg)`;
+          }
+          else if (rect.top >= 200 && itemStates[index]) {
+            if (itemStates[index].element.parentNode === stickyContainer) {
+              stickyContainer.removeChild(itemStates[index].element);
+            }
+            delete itemStates[index];
+            item.style.opacity = 1;
+          }
+        });
+      });
+      
+      // Reset on load
+      resetAllItems();
+      
+      // Escape key to reset
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          resetAllItems();
+        }
+      });
+    }
   </script>
 </body>
 </html>
