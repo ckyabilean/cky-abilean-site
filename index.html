@@ -19,8 +19,16 @@
     .item {
       font-size: 48px;
       margin-bottom: 120px;
-      transition: transform 0.2s ease-out;
+      transition: transform 0.2s ease-out, color 0.2s ease;
       cursor: pointer;
+      display: inline-block;
+    }
+    
+    /* Hover state for items */
+    .item:hover {
+      color: #ff0;
+      transform: translateX(10px);
+      cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 24 24' fill='none' stroke='%230f0' stroke-width='2'><circle cx='12' cy='9' r='6'/><path d='M8 14l2 5 2-5M12 14l2 5 2-5'/><path d='M9 9h.01M15 9h.01'/><path d='M12 12v1'/></svg>"), auto;
     }
 
     .sticky-container {
@@ -48,12 +56,24 @@
   <div id="content">
     <div class="items-container">
       <div class="item">ITEM A</div>
+      <div class="item">TRACK 01</div>
       <div class="item">ITEM B</div>
+      <div class="item">LATEST RELEASE</div>
       <div class="item">ITEM C</div>
+      <div class="item">MUSIC PRODUCER</div>
       <div class="item">ITEM D</div>
+      <div class="item">CONTACT INFO</div>
       <div class="item">ITEM E</div>
+      <div class="item">ALBUM TITLE</div>
       <div class="item">ITEM F</div>
+      <div class="item">SOUND DESIGN</div>
       <div class="item">ITEM G</div>
+      <div class="item">MIXING & MASTERING</div>
+      <div class="item">ITEM H</div>
+      <div class="item">COLLABORATIONS</div>
+      <div class="item">ITEM I</div>
+      <div class="item">UPCOMING SHOWS</div>
+      <div class="item">ITEM J</div>
     </div>
   </div>
   
