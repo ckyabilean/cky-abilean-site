@@ -31,35 +31,10 @@
       overflow: visible;
     }
     
-    /* Controls panel */
-    .controls {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: rgba(0, 20, 0, 0.8);
-      padding: 15px;
-      border: 1px solid #0f0;
-      z-index: 100;
-    }
-    
-    .controls button {
-      background: #0f0;
-      color: #000;
-      border: none;
-      padding: 8px 15px;
-      margin: 5px;
-      cursor: pointer;
-      font-family: 'Courier New', monospace;
-    }
-    
-    .controls label {
-      display: block;
-      margin: 10px 0 5px;
-    }
-    
-    /* Scramble effect styling */
-    .scramble-char {
+    /* Letter effect styling */
+    .letter {
       display: inline-block;
+      transition: transform 0.3s ease-out;
     }
     
     @media (max-width: 768px) {
@@ -82,75 +57,9 @@
     </div>
   </div>
   
-  <div class="controls">
-    <button id="resetBtn">Reset Animation</button>
-    <label>
-      Scramble Speed:
-      <input type="range" id="scrambleSpeed" min="1" max="10" value="5">
-    </label>
-    <label>
-      Chaos Intensity:
-      <input type="range" id="chaosIntensity" min="1" max="20" value="10">
-    </label>
-  </div>
-  
   <script>
-    // Text scramble effect class
-    class TextScramble {
-      constructor(element) {
-        this.element = element;
-        this.originalText = element.innerText;
-        this.chars = '!<>-_\\/[]{}—=+*^?#________';
-        this.frameRate = 15;
-        this.frameRequest = null;
-        this.frames = 0;
-        this.finalText = this.originalText;
-      }
-      
-      randomChar() {
-        return this.chars[Math.floor(Math.random() * this.chars.length)];
-      }
-      
-      update() {
-        const speed = parseInt(document.getElementById('scrambleSpeed').value);
-        let output = '';
-        let complete = true;
-        
-        // Create scrambled version of text
-        for (let i = 0; i < this.finalText.length; i++) {
-          // If character should be scrambled
-          if (this.frames < 10 * (10 - speed) || Math.random() < this.frames / (100 * (10 - speed))) {
-            output += `<span class="scramble-char">${this.randomChar()}</span>`;
-            complete = false;
-          } else {
-            output += `<span class="scramble-char">${this.finalText[i]}</span>`;
-          }
-        }
-        
-        this.element.innerHTML = output;
-        
-        if (!complete) {
-          this.frames++;
-          this.frameRequest = requestAnimationFrame(() => this.update());
-        }
-      }
-      
-      start() {
-        this.frames = 0;
-        cancelAnimationFrame(this.frameRequest);
-        this.update();
-      }
-      
-      reset() {
-        cancelAnimationFrame(this.frameRequest);
-        this.element.innerText = this.originalText;
-      }
-    }
-  
-    // Initialize main animation
     const items = document.querySelectorAll('.item');
     const content = document.getElementById('content');
-    const scrambleInstances = [];
 
     // Create sticky container
     const stickyContainer = document.createElement('div');
@@ -159,32 +68,24 @@
 
     // Item states
     const itemStates = {};
-    
-    // Initialize scramble effect for each item
-    items.forEach(item => {
-      const scrambler = new TextScramble(item);
-      scrambleInstances.push(scrambler);
-    });
 
-    // Controls
-    document.getElementById('resetBtn').addEventListener('click', () => {
-      // Clear all sticky items
-      stickyContainer.innerHTML = '';
+    // Split text into letter spans
+    function splitTextIntoLetters(element) {
+      const text = element.innerText;
+      element.innerHTML = '';
       
-      // Reset states
-      Object.keys(itemStates).forEach(key => {
-        delete itemStates[key];
-      });
+      // Create a span for each letter
+      for (let i = 0; i < text.length; i++) {
+        const letter = document.createElement('span');
+        letter.className = 'letter';
+        letter.innerText = text[i];
+        element.appendChild(letter);
+      }
       
-      // Show all original items
-      items.forEach(item => {
-        item.style.opacity = 1;
-      });
-    });
+      return element.querySelectorAll('.letter');
+    }
 
     window.addEventListener('scroll', () => {
-      const chaosIntensity = parseInt(document.getElementById('chaosIntensity').value);
-      
       items.forEach((item, index) => {
         const rect = item.getBoundingClientRect();
         
@@ -197,18 +98,18 @@
             clone.style.position = 'absolute';
             stickyContainer.appendChild(clone);
             
+            // Split text into letters
+            const letters = splitTextIntoLetters(clone);
+            
             // Mark this item as at the top
             itemStates[index] = {
               element: clone,
+              letters: letters,
               x: 0,
               y: 0, 
               rotation: 0,
-              chaos: 0,
-              scrambler: new TextScramble(clone)
+              chaos: 0
             };
-            
-            // Start text scramble
-            itemStates[index].scrambler.start();
             
             // Hide original
             item.style.opacity = 0;
@@ -219,21 +120,39 @@
           const chaos = Math.min(1, distancePastThreshold / 300);
           
           itemStates[index].chaos = chaos;
-          itemStates[index].x += (Math.random() * 3 * chaosIntensity - 1.5 * chaosIntensity) * chaos;
-          itemStates[index].y = Math.random() * 2 * chaosIntensity * chaos;
-          itemStates[index].rotation += (Math.random() * 2 * chaosIntensity - 1 * chaosIntensity) * chaos;
           
-          // Apply transformation
+          // Apply letter separation effect
+          itemStates[index].letters.forEach((letter, i) => {
+            const randomX = (Math.random() * 60 - 30) * chaos;
+            const randomY = (Math.random() * 40 - 20) * chaos;
+            const randomRotate = (Math.random() * 40 - 20) * chaos;
+            
+            letter.style.transform = `translate(${randomX}px, ${randomY}px) rotate(${randomRotate}deg)`;
+          });
+          
+          // Also apply some movement to the whole item
+          itemStates[index].x += (Math.random() * 10 - 5) * chaos;
+          itemStates[index].y = Math.random() * 10 * chaos;
+          itemStates[index].rotation += (Math.random() * 5 - 2.5) * chaos;
+          
+          // Apply transformation to whole item
           itemStates[index].element.style.transform = 
             `translate(${itemStates[index].x}px, ${itemStates[index].y}px) rotate(${itemStates[index].rotation}deg)`;
         }
         // If scrolling back up
         else if (itemStates[index]) {
+          // Smooth return for item position
           itemStates[index].x *= 0.8;
           itemStates[index].y *= 0.8;
           itemStates[index].rotation *= 0.8;
           
-          // Apply reduced transformation
+          // Smooth return for letters
+          itemStates[index].letters.forEach(letter => {
+            // Reset letter positions gradually
+            letter.style.transform = 'translate(0px, 0px) rotate(0deg)';
+          });
+          
+          // Apply reduced transformation to whole item
           itemStates[index].element.style.transform = 
             `translate(${itemStates[index].x}px, ${itemStates[index].y}px) rotate(${itemStates[index].rotation}deg)`;
           
