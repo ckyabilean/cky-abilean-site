@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tracks</title>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    @media (min-width: 768px) {
+      .grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    @media (min-width: 1024px) {
+      .grid {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+    }
+    .card {
+      border: 1px solid #eee;
+      border-radius: 8px;
+      padding: 16px;
+      transition: box-shadow 0.2s;
+    }
+    .card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    audio {
+      width: 100%;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Tracks</h1>
+  <div id="tracks-container" class="grid">
+    <!-- Tracks will be loaded here -->
+    <p>Loading...</p>
+  </div>
+
+  <script>
+    // Fetch and display tracks
+    async function fetchTracks() {
+      const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTfdWsAb5c_064f9Us_-UviOyrqLUUuXZ6EZjetzMRWiELIAVfi5sDTJia6kB9TxddeWD8TGSeHH6c6/pub?gid=0&single=true&output=csv';
+      
+      try {
+        // Fetch the CSV data
+        const response = await fetch(SHEET_URL);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch sheet data: ${response.status}`);
+        }
+        
+        const csvText = await response.text();
+        
+        // Parse CSV to JSON using PapaParse
+        const result = Papa.parse(csvText, {
+          header: true,
+          skipEmptyLines: true,
+          dynamicTyping: true
+        });
+        
+        if (result.errors.length > 0) {
+          console.error("CSV parsing errors:", result.errors);
+        }
+        
+        const tracksContainer = document.getElementById('tracks-container');
+        tracksContainer.innerHTML = ''; // Clear loading message
+        
+        // Display the tracks
+        result.data.forEach(track => {
+          const card = document.createElement('div');
+          card.className = 'card';
+          
+          let cardContent = `
+            <h2>${track.title || 'Untitled'}</h2>
+            <p>${track.description || ''}</p>
+          `;
+          
+          if (track.audioUrl) {
+            cardContent += `
+              <audio controls src="${track.audioUrl}"></audio>
+            `;
+          }
+          
+          card.innerHTML = cardContent;
+          tracksContainer.appendChild(card);
+        });
+        
+      } catch (error) {
+        console.error("Error fetching sheet data:", error);
+        document.getElementById('tracks-container').innerHTML = '<p>Error loading tracks. Please try again later.</p>';
+      }
+    }
+    
+    // Run when page loads
+    window.addEventListener('DOMContentLoaded', fetchTracks);
+  </script>
+</body>
+</html>
