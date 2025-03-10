@@ -180,9 +180,74 @@
         
         if (timeRemaining <= 0) {
           // Refresh the page when a countdown ends
+          logActivity('release_unlocked', { element: countdown.closest('.card').querySelector('h2').textContent });
           location.reload();
         } else {
           countdown.textContent = `Drops in: ${formatTimeRemaining(timeRemaining)}`;
+        }
+      });
+    }
+
+    // Track user activity
+    function logActivity(action, details = {}) {
+      // Get existing log or create new one
+      const activityLog = JSON.parse(localStorage.getItem('activityLog') || '[]');
+      
+      // Add new entry with timestamp
+      activityLog.push({
+        action,
+        details,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Keep only the most recent 100 entries
+      if (activityLog.length > 100) {
+        activityLog.shift();
+      }
+      
+      // Save back to localStorage
+      localStorage.setItem('activityLog', JSON.stringify(activityLog));
+    }
+    
+    // Display tracks from data
+    function renderTracks(tracks, timeOffset) {
+      const tracksContainer = document.getElementById('tracks-container');
+      tracksContainer.innerHTML = ''; // Clear previous content
+      
+      const now = Date.now() + timeOffset;
+      
+      // Display the tracks
+      tracks.forEach(track => {
+        const card = document.createElement('div');
+        const cardData = getCardHTML(track, now);
+        
+        card.className = 'card';
+        if (cardData.isComingSoon) {
+          card.classList.add('coming-soon');
+        }
+        if (cardData.isNew) {
+          card.classList.add('new-release');
+        }
+        
+        card.innerHTML = cardData.html;
+        
+        // Add event listener for audio play
+        card.addEventListener('click', (e) => {
+          const audioElement = card.querySelector('audio');
+          if (audioElement && e.target.closest('.card') && !e.target.closest('.card').classList.contains('coming-soon')) {
+            logActivity('track_played', { title: track.title, id: track.id });
+          }
+        });
+        
+        tracksContainer.appendChild(card);
+      });
+      
+      // Add event delegation for play buttons
+      tracksContainer.addEventListener('click', (e) => {
+        if (e.target.classList.contains('listen-button') && !e.target.disabled) {
+          const card = e.target.closest('.card');
+          const title = card.querySelector('h2').textContent;
+          logActivity('listen_clicked', { title });
         }
       });
     }
@@ -191,11 +256,43 @@
     async function fetchTracks() {
       const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTfdWsAb5c_064f9Us_-UviOyrqLUUuXZ6EZjetzMRWiELIAVfi5sDTJia6kB9TxddeWD8TGSeHH6c6/pub?gid=0&single=true&output=csv';
       
+      // Log page visit
+      logActivity('page_viewed');
+      
+      // Try to use cached data first if available
+      const cachedData = localStorage.getItem('tracksCache');
+      const cachedTime = localStorage.getItem('tracksCacheTime');
+      const cacheAge = cachedTime ? Date.now() - parseInt(cachedTime) : Infinity;
+      
+      let timeOffset = 0;
+      
+      // Check if we have a recent cache (less than 1 hour old)
+      if (cachedData && cacheAge < 60 * 60 * 1000) {
+        try {
+          const tracks = JSON.parse(cachedData);
+          
+          // Get offset from localStorage or default to 0
+          timeOffset = parseInt(localStorage.getItem('timeOffset') || '0');
+          
+          // Show cached data immediately while we fetch fresh data
+          renderTracks(tracks, timeOffset);
+          console.log('Rendered from cache while fetching fresh data');
+        } catch (e) {
+          console.error('Error parsing cached data', e);
+        }
+      } else {
+        // No cache or expired - show loading
+        document.getElementById('tracks-container').innerHTML = '<p>Loading...</p>';
+      }
+      
       try {
         // Get accurate time
         const serverTime = await getServerTime();
         const localTime = Date.now();
-        const timeOffset = serverTime - localTime; // Adjust for any difference
+        timeOffset = serverTime - localTime; // Adjust for any difference
+        
+        // Save time offset for future use
+        localStorage.setItem('timeOffset', timeOffset.toString());
         
         // Fetch the CSV data
         const response = await fetch(SHEET_URL);
@@ -217,34 +314,29 @@
           console.error("CSV parsing errors:", result.errors);
         }
         
-        const tracksContainer = document.getElementById('tracks-container');
-        tracksContainer.innerHTML = ''; // Clear loading message
+        // Cache the fresh data
+        localStorage.setItem('tracksCache', JSON.stringify(result.data));
+        localStorage.setItem('tracksCacheTime', Date.now().toString());
         
-        const now = Date.now() + timeOffset;
-        
-        // Display the tracks
-        result.data.forEach(track => {
-          const card = document.createElement('div');
-          const cardData = getCardHTML(track, now);
-          
-          card.className = 'card';
-          if (cardData.isComingSoon) {
-            card.classList.add('coming-soon');
-          }
-          if (cardData.isNew) {
-            card.classList.add('new-release');
-          }
-          
-          card.innerHTML = cardData.html;
-          tracksContainer.appendChild(card);
-        });
+        // Render the tracks with fresh data
+        renderTracks(result.data, timeOffset);
+        logActivity('data_refreshed');
         
         // Start countdown timer
         setInterval(() => updateCountdowns(timeOffset), 1000);
         
       } catch (error) {
         console.error("Error fetching sheet data:", error);
-        document.getElementById('tracks-container').innerHTML = '<p>Error loading tracks. Please try again later.</p>';
+        
+        // If we have cached data, keep showing it
+        if (!cachedData) {
+          document.getElementById('tracks-container').innerHTML = 
+            '<p>Error loading tracks. Please check your connection and try again.</p>';
+        } else {
+          // Log the error but keep showing cached data
+          logActivity('fetch_error', { message: error.message });
+          console.log('Continuing with cached data due to fetch error');
+        }
       }
     }
     
