@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Test for the "Radio" audio playback</title>
+  <title>Radio Test - Mobile Friendly</title>
   <style>
     body {
       margin: 0;
@@ -21,9 +21,53 @@
     h1 {
       font-size: 36px;
       margin-bottom: 40px;
+      text-align: center;
     }
     
-    .start-button, .mute-button {
+    .player-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 500px;
+    }
+    
+    .start-button {
+      padding: 16px 32px;
+      background-color: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white;
+      font-size: 18px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      min-width: 200px;
+      min-height: 60px; /* Larger target for mobile */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+    
+    .start-button:hover {
+      background-color: rgba(255,255,255,0.2);
+    }
+    
+    .now-playing {
+      margin-bottom: 5px;
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+    }
+    
+    .stream-info {
+      margin-bottom: 20px;
+      font-size: 14px;
+      opacity: 0.8;
+      text-align: center;
+    }
+    
+    .mute-button {
       padding: 12px 24px;
       background-color: rgba(255,255,255,0.1);
       border: 1px solid rgba(255,255,255,0.3);
@@ -32,21 +76,12 @@
       border-radius: 4px;
       cursor: pointer;
       transition: background-color 0.2s;
+      min-height: 44px; /* Mobile-friendly touch target */
+      min-width: 44px;
     }
     
-    .start-button:hover, .mute-button:hover {
+    .mute-button:hover {
       background-color: rgba(255,255,255,0.2);
-    }
-    
-    .player-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    
-    .now-playing {
-      margin-bottom: 20px;
-      font-size: 18px;
     }
     
     #player {
@@ -54,14 +89,48 @@
       opacity: 0;
       pointer-events: none;
     }
+    
+    /* Desktop vs mobile instructions */
+    .desktop-instructions {
+      display: block;
+    }
+    
+    .mobile-instructions {
+      display: none;
+    }
+    
+    /* Media queries for mobile */
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 28px;
+        margin-bottom: 30px;
+        padding: 0 20px;
+      }
+      
+      .desktop-instructions {
+        display: none;
+      }
+      
+      .mobile-instructions {
+        display: block;
+      }
+      
+      .start-button {
+        width: 80%;
+        max-width: 280px;
+      }
+    }
   </style>
 </head>
 <body>
-  <h1>Streaming Beintrossei FM 69.5</h1>
+  <h1>Music Producer Radio</h1>
   
   <div class="player-container">
     <div id="player-controls">
-      <button id="start-button" class="start-button">PRESS FRIGGIN SPACE TO START RADIO</button>
+      <button id="start-button" class="start-button">
+        <span class="desktop-instructions">PRESS SPACE TO START</span>
+        <span class="mobile-instructions">TAP TO START RADIO</span>
+      </button>
     </div>
   </div>
   
@@ -72,6 +141,7 @@
     let player;
     let isPlaying = false;
     let isMuted = false;
+    let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     
     // Load YouTube API
     const tag = document.createElement('script');
@@ -84,7 +154,7 @@
       player = new YT.Player('player', {
         height: '1',
         width: '1',
-        videoId: '4xDzrJKXOOY', // Lofi pezzazz
+        videoId: 'jfKfPfyJRdk', // Lofi hip hop radio for testing
         playerVars: {
           autoplay: 0,
           controls: 0,
@@ -107,13 +177,32 @@
       if (event.data === YT.PlayerState.PLAYING) {
         isPlaying = true;
         updateUI();
+      } else if (event.data === YT.PlayerState.ENDED) {
+        // This shouldn't happen with livestreams, but just in case:
+        player.playVideo();
       }
     }
     
     // Start playback
     function startPlayback() {
       if (player && !isPlaying) {
-        player.playVideo();
+        // On mobile, we need to handle special playback conditions
+        if (isMobile) {
+          // Mobile browsers often require specific play handling
+          let playPromise = player.playVideo();
+          
+          // If browser returns a promise (newer browsers)
+          if (playPromise !== undefined) {
+            playPromise.catch(error => {
+              console.error("Playback failed:", error);
+              // Show a message to the user about needing to interact
+              alert("Please tap again to enable audio (mobile browser requirement)");
+            });
+          }
+        } else {
+          // Desktop is simpler
+          player.playVideo();
+        }
       }
     }
     
@@ -137,21 +226,25 @@
       
       if (isPlaying) {
         controls.innerHTML = `
-          <div class="now-playing">Now Streaming</div>
+          <div class="now-playing">Now Streaming: Lofi Hip Hop Radio</div>
+          <div class="stream-info">Beat Study Session</div>
           <button id="mute-button" class="mute-button">${isMuted ? '🔇 UNMUTE' : '🔊 MUTE'}</button>
         `;
         document.getElementById('mute-button').addEventListener('click', toggleMute);
       } else {
         controls.innerHTML = `
-          <button id="start-button" class="start-button">PRESS SPACE TO START RADIO</button>
+          <button id="start-button" class="start-button">
+            <span class="desktop-instructions">PRESS SPACE TO START</span>
+            <span class="mobile-instructions">TAP TO START RADIO</span>
+          </button>
         `;
         document.getElementById('start-button').addEventListener('click', startPlayback);
       }
     }
     
-    // Handle spacebar press
+    // Handle spacebar press (desktop only)
     window.addEventListener('keydown', function(e) {
-      if (e.code === 'Space' && !e.target.tagName.match(/INPUT|TEXTAREA/i)) {
+      if (!isMobile && e.code === 'Space' && !e.target.tagName.match(/INPUT|TEXTAREA/i)) {
         e.preventDefault();
         
         if (!isPlaying) {
