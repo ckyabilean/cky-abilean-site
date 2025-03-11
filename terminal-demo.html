@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terminal Demo</title>
+  <link rel="stylesheet" href="lib/terminal.css">
+</head>
+<body style="background-color: black; margin: 0; padding: 20px;">
+  
+  <div style="max-width: 800px; margin: 0 auto;">
+    <!-- Header -->
+    <header style="margin-bottom: 40px; text-align: center;">
+      <h1 class="terminal-text terminal-scramble">TERMINAL UI DEMO</h1>
+      <p class="terminal-text terminal-typewriter" data-speed="30" data-cursor="true">
+        A simple terminal-style interface for your music site
+      </p>
+    </header>
+    
+    <!-- Terminal Container -->
+    <div class="terminal-container" style="margin-bottom: 40px;">
+      <p class="terminal-text terminal-typewriter" data-speed="20">
+        $ cd /music/production
+      </p>
+      <p class="terminal-text terminal-typewriter" data-speed="20">
+        $ ls -la
+      </p>
+      <div style="margin-top: 10px; color: #33FF33; font-family: monospace;">
+        <p>track_01.wav</p>
+        <p>track_02.wav</p>
+        <p>track_03.wav</p>
+      </div>
+    </div>
+    
+    <!-- Text Effects -->
+    <div style="margin-bottom: 40px;">
+      <h2 class="terminal-text">Text Effects</h2>
+      
+      <div class="terminal-container" style="margin-top: 20px;">
+        <p class="terminal-text">Normal terminal text</p>
+        <p class="terminal-text terminal-scramble">This text will scramble when scrolled into view</p>
+        <p class="terminal-text terminal-typewriter" data-cursor="true">
+          This text types out letter by letter with a cursor
+        </p>
+      </div>
+    </div>
+    
+    <!-- Buttons -->
+    <div style="margin-bottom: 40px;">
+      <h2 class="terminal-text">Terminal Buttons</h2>
+      
+      <div style="display: flex; gap: 10px; margin-top: 20px;">
+        <button class="terminal-button">ACTIVATE</button>
+        <button class="terminal-button">DOWNLOAD</button>
+        <button class="terminal-button">CONNECT</button>
+      </div>
+    </div>
+  </div>
+  
+  <script src="lib/terminal.js"></script>
+</body>
+</html>
