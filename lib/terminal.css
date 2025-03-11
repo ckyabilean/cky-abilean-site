@@ -2,11 +2,22 @@
   --terminal-green: #33FF33;
   --terminal-green-dim: #00CC00;
   --terminal-bg: #000000;
+  --terminal-pink: #FF00FF; /* Hot pink for hover */
 }
 
 .terminal-text {
   font-family: monospace;
   color: var(--terminal-green);
+  font-size: 18px; /* Bigger base font */
+  text-transform: uppercase; /* Everything uppercase */
+}
+
+h1.terminal-text {
+  font-size: 36px; /* Bigger headings */
+}
+
+h2.terminal-text {
+  font-size: 28px; /* Bigger subheadings */
 }
 
 .terminal-container {
@@ -15,6 +26,11 @@
   padding: 20px;
   position: relative;
   overflow: hidden;
+}
+
+/* Hover effect for containers */
+.terminal-container:hover {
+  border-color: var(--terminal-pink);
 }
 
 /* Scanline effect */
@@ -39,12 +55,16 @@
 /* Blinking cursor */
 .terminal-cursor {
   display: inline-block;
-  width: 8px;
-  height: 16px;
+  width: 10px; /* Wider cursor */
+  height: 20px; /* Taller cursor */
   background-color: var(--terminal-green);
   animation: blink 1s step-end infinite;
   vertical-align: middle;
   margin-left: 2px;
+}
+
+.terminal-cursor:hover {
+  background-color: var(--terminal-pink);
 }
 
 @keyframes blink {
@@ -55,14 +75,18 @@
 /* Terminal button */
 .terminal-button {
   background-color: var(--terminal-bg);
-  border: 1px solid var(--terminal-green);
+  border: 2px solid var(--terminal-green); /* Thicker border */
   color: var(--terminal-green);
   font-family: monospace;
-  padding: 8px 16px;
+  font-size: 16px; /* Bigger text */
+  padding: 10px 20px; /* Bigger padding */
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.3s;
+  text-transform: uppercase; /* Everything uppercase */
 }
 
 .terminal-button:hover {
-  background-color: rgba(51, 255, 51, 0.1);
+  background-color: rgba(255, 0, 255, 0.2); /* Pink hover background */
+  border-color: var(--terminal-pink);
+  color: var(--terminal-pink);
 }
