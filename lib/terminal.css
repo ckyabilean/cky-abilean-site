@@ -1,0 +1,68 @@
+:root {
+  --terminal-green: #33FF33;
+  --terminal-green-dim: #00CC00;
+  --terminal-bg: #000000;
+}
+
+.terminal-text {
+  font-family: monospace;
+  color: var(--terminal-green);
+}
+
+.terminal-container {
+  background-color: var(--terminal-bg);
+  border: 1px solid var(--terminal-green);
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Scanline effect */
+.terminal-container::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgba(18, 16, 16, 0) 50%,
+    rgba(0, 0, 0, 0.25) 50%
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.3;
+}
+
+/* Blinking cursor */
+.terminal-cursor {
+  display: inline-block;
+  width: 8px;
+  height: 16px;
+  background-color: var(--terminal-green);
+  animation: blink 1s step-end infinite;
+  vertical-align: middle;
+  margin-left: 2px;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Terminal button */
+.terminal-button {
+  background-color: var(--terminal-bg);
+  border: 1px solid var(--terminal-green);
+  color: var(--terminal-green);
+  font-family: monospace;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.terminal-button:hover {
+  background-color: rgba(51, 255, 51, 0.1);
+}
